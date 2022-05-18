@@ -1,0 +1,17 @@
+{
+  "name": "tracker-data-sync-script",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^3.2.3",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  }
+}
