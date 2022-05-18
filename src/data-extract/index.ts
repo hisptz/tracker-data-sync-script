@@ -2,7 +2,7 @@ import {Pagination} from "./interfaces/pagination";
 import {getHttpAuthorizationHeader, HTTPUtil} from "../utils/http";
 import logger from "../utils/logger";
 import {set} from "lodash";
-import {asyncify, map, mapLimit, timeout} from "async";
+import {asyncify, map, mapLimit, QueueObject, timeout} from "async";
 import FilesService from "../utils/files";
 
 export interface DataExtractConfig {
@@ -29,7 +29,7 @@ export default class DataExtractService {
     constructor(duration: number | undefined, pageSize: number | undefined, config: DataExtractConfig) {
         this.duration = duration;
         this.pageSize = pageSize ?? 50;
-        this.sourceURL = new URL("/api", process.env.SOURCE_DHIS2_BASE_URL ?? "");
+        this.sourceURL = new URL(process.env.SOURCE_DHIS2_BASE_URL ?? "");
         this.http = new HTTPUtil(this.sourceURL, getHttpAuthorizationHeader(process.env.SOURCE_DHIS2_USERNAME ?? "", process.env.SOURCE_DHIS2_PASSWORD ?? ""));
         this.config = config;
 
@@ -43,6 +43,13 @@ export default class DataExtractService {
         const pagination = await this.getPagination();
         if (pagination) {
             await this.getAllData(pagination.pageCount);
+        }
+    }
+
+    async extractAndUploadData(uploadQueue: QueueObject<any>) {
+        const pagination = await this.getPagination();
+        if (pagination) {
+            await this.getAllData(pagination.pageCount, uploadQueue);
         }
     }
 
@@ -80,7 +87,7 @@ export default class DataExtractService {
         }
     }
 
-    async getData(page: number, http: HTTPUtil, pageSize: number, config: DataExtractConfig) {
+    async getData(page: number, http: HTTPUtil, pageSize: number, config: DataExtractConfig, uploadQueue?: QueueObject<any>) {
         try {
             const endPoint = `trackedEntityInstances`;
             const params = {
@@ -113,8 +120,16 @@ export default class DataExtractService {
             });
 
             if (data) {
-                await this.saveDataToFile(data, page);
+                const fileName = await this.saveDataToFile(data, page);
+                logger.info({
+                    message: `Saved page ${page} to file: ${fileName}`,
+                    fn: "getData",
+                })
+                if (uploadQueue) {
+                    uploadQueue.push(`${fileName}`);
+                }
             }
+
         } catch (e: any) {
             logger.error({
                 message: e.message,
@@ -124,13 +139,14 @@ export default class DataExtractService {
         }
     }
 
-    async getAllData(pageCount: number) {
+    async getAllData(pageCount: number, uploadQueue?: QueueObject<any>) {
         const pages = Array.from({length: pageCount}, (_, i) => i + 1);
-        await mapLimit(pages, 10, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config)));
+        await mapLimit(pages, 10, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config, uploadQueue)));
     }
 
-    async saveDataToFile(data: any, page: number) {
-        await FilesService.writeFile(`${this.config.program}-${this.config.ou}-page-${page}`, data);
+    async saveDataToFile(data: any, page: number): Promise<string> {
+        const fileName = `${this.config.program}-${this.config.ou}-page-${page}`;
+        return await FilesService.writeFile(fileName, data);
     }
 
 }

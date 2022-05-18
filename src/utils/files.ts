@@ -15,7 +15,7 @@ export default class FilesService {
     }
 
 
-    static async writeFile(fileName: string, data: any): Promise<void> {
+    static async writeFile(fileName: string, data: any): Promise<string> {
         return new Promise((resolve, reject) => {
             const filePath = this.getFilePath(fileName);
             this.makeDir(this.folderName);
@@ -23,7 +23,7 @@ export default class FilesService {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve()
+                    resolve(fileName)
                 }
             });
 

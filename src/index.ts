@@ -1,6 +1,8 @@
 import DataExtractService, {DataExtractConfig} from "./data-extract";
 import {config} from "dotenv";
 import FilesService from "./utils/files";
+import {QueueObject} from "async";
+import {DataUploadService} from "./data-upload";
 
 
 const extractConfig: DataExtractConfig = {
@@ -13,15 +15,25 @@ const extractConfig: DataExtractConfig = {
 }
 
 
-export async function syncData(duration?: number, pageSize?: number, clean?: boolean) {
+export default class DataSync {
 
-    if (clean) {
-        await FilesService.clearFiles();
+
+    dataUploadService: DataUploadService;
+    dataExtractService: DataExtractService;
+
+    constructor(duration?: number, pageSize?: number) {
+        this.dataExtractService = new DataExtractService(duration, pageSize, extractConfig);
+        this.dataUploadService = new DataUploadService();
     }
 
-    const dataExtractor = new DataExtractService(duration, pageSize, extractConfig);
-    await dataExtractor.extractData();
+    async sync(clean: boolean) {
+        if (clean) {
+            await FilesService.clearFiles();
+        }
+        await this.dataExtractService.extractAndUploadData(this.dataUploadService.getQueue());
+    }
+
 }
 
 config();
-syncData(100, 50, true);
+new DataSync(100, 50,).sync(true);

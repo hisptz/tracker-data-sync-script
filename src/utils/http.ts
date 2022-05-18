@@ -58,7 +58,7 @@ export class HTTPUtil {
 
     async post(endPoint: string, data: any, params?: { [key: string]: any }) {
         return new Promise((resolve, reject) => {
-            const url = new URL(endPoint, this.url?.href);
+            const url = new URL(`/api/${endPoint}`, this.url?.href);
             for (const key in params) {
                 url?.searchParams.append(key, params[key]);
             }
@@ -89,7 +89,7 @@ export class HTTPUtil {
 
     async delete(endPoint: string) {
         return new Promise((resolve, reject) => {
-            const url = new URL(endPoint, this.url?.href);
+            const url = new URL(`/api/${endPoint}`, this.url?.href);
             request(
                 {
                     headers: this.headers,
@@ -116,7 +116,7 @@ export class HTTPUtil {
 
     async put(endPoint: string, data: any, params?: { [key: string]: any }) {
         return new Promise((resolve, reject) => {
-            const url = new URL(endPoint, this.url?.href);
+            const url = new URL(`/api/${endPoint}`, this.url?.href);
             for (const key in params) {
                 url?.searchParams.append(key, params[key]);
             }
