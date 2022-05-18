@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "bin": {
-    "data-sync": "./bin/data-sync"
-  },
+  "description": "A script to sync tracker data from one DHIS2 instance to another",
   "dependencies": {
     "async": "^3.2.3",
     "axios": "^0.27.2",
