@@ -48,7 +48,7 @@ program.name("tracker-data-sync")
 
 program.command("sync")
     .option("-d --duration <duration>", "Duration of the extraction in days", "30")
-    .option("-p --page-size <page-size>", "Page size of the extraction", "100")
+    .option("-p --page-size <page-size>", "Page size of the extraction", "50")
     .option("-u --upload-concurrency <upload-concurrency>", "Concurrency of the upload", "1")
     .option("-d --download-concurrency <download-concurrency>", "Concurrency of the download", "1")
     .action(async (arg) => {
