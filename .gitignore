@@ -119,3 +119,5 @@ dist
 data/
 
 /app/
+*.zip
+/build/

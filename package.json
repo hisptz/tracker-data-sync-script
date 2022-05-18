@@ -31,6 +31,6 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "yarn webpack",
-    "postbuild": "cp package.json .env.example app/"
+    "postbuild": "./package.sh"
   }
 }

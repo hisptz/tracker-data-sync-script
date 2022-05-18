@@ -6,7 +6,7 @@ module.exports = {
     entry: './src/index.ts',
     output: {
         filename: 'index.js',
-        path: path.resolve(__dirname, 'app'),
+        path: path.resolve(__dirname, 'build/app'),
     },
     optimization: {
         minimize: false
