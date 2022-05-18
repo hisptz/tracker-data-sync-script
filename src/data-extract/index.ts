@@ -4,6 +4,7 @@ import logger from "../utils/logger";
 import {set} from "lodash";
 import {asyncify, map, mapLimit, QueueObject, timeout} from "async";
 import FilesService from "../utils/files";
+import SummaryService from "../summary";
 
 export interface DataExtractConfig {
     program: string;
@@ -126,8 +127,40 @@ export default class DataExtractService {
                     fn: "getData",
                 })
                 if (uploadQueue) {
-                    uploadQueue.push(`${fileName}`);
+                    uploadQueue.push(`${fileName}`).then(() => {
+                        logger.info({
+                            message: `Uploaded page ${page}`,
+                            fn: "getData",
+                        })
+                        SummaryService.updateOrCreate(page, {
+                            page,
+                            upload: {
+                                status: "success",
+                                message: "Uploaded",
+                            }
+                        })
+                    }).catch((e: any) => {
+                        SummaryService.updateOrCreate(page, {
+                            page,
+                            upload: {
+                                status: "error",
+                                message: e.message,
+                            }
+                        })
+                    });
                 }
+
+                SummaryService.updateOrCreate(page, {
+                    page,
+                    download: {
+                        status: "success",
+                        message: "Successfully fetched data and saved to file"
+                    },
+                    upload: {
+                        status: "pending",
+                        message: "Waiting for upload"
+                    }
+                })
 
                 return {
                     page,

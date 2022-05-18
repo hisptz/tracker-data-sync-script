@@ -2,6 +2,7 @@ import DataExtractService from "./data-extract";
 import {config} from "dotenv";
 import FilesService from "./utils/files";
 import {DataUploadService} from "./data-upload";
+import SummaryService from "./summary";
 
 
 export default class DataSync {
@@ -29,6 +30,8 @@ export default class DataSync {
         if (clean) {
             await FilesService.clearFiles();
         }
+        await SummaryService.init();
+        this.dataUploadService.setOnQueueComplete(async () => await SummaryService.sendSummary(this.dataExtractService.pageSize, this.dataExtractService.duration))
         await this.dataExtractService.extractAndUploadData(this.dataUploadService.getQueue());
     }
 

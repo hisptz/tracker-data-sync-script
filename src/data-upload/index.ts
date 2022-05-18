@@ -17,6 +17,9 @@ export class DataUploadService {
         this.queue = queue(asyncify(this.uploadDataFromFile), concurrency);
 
     }
+    setOnQueueComplete(callback: () => Promise<void>) {
+        this.queue.drain(callback);
+    }
 
     cancelUpload() {
         this.queue.kill();
