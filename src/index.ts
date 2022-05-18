@@ -1,29 +1,28 @@
-import DataExtractService, {DataExtractConfig} from "./data-extract";
+import DataExtractService from "./data-extract";
 import {config} from "dotenv";
 import FilesService from "./utils/files";
-import {QueueObject} from "async";
 import {DataUploadService} from "./data-upload";
-
-
-const extractConfig: DataExtractConfig = {
-    program: "yDuAzyqYABS",
-    fields: ":all,attributes[:all,attribute,code,value],enrollments[*],orgUnit,trackedEntityInstance",
-    ou: "m0frOspS7JY",
-    ouMode: "DESCENDANTS",
-    skipPaging: false,
-    totalPages: true,
-}
 
 
 export default class DataSync {
 
-
     dataUploadService: DataUploadService;
     dataExtractService: DataExtractService;
 
-    constructor(duration?: number, pageSize?: number) {
-        this.dataExtractService = new DataExtractService(duration, pageSize, extractConfig);
-        this.dataUploadService = new DataUploadService();
+    constructor(duration?: number, pageSize?: number, concurrency: { download: number, upload: number } = {
+        download: 1,
+        upload: 1
+    }) {
+        this.dataExtractService = new DataExtractService(duration, pageSize, {
+            program: process.env.PROGRAM_ID ?? "",
+            fields: ":all,attributes[:all,attribute,code,value],enrollments[*],orgUnit,trackedEntityInstance",
+            ou: process.env.ORGANISATION_UNIT_ID ?? "",
+            totalPages: true,
+            skipPaging: false,
+            ouMode: "DESCENDANTS",
+            concurrency: concurrency.download,
+        });
+        this.dataUploadService = new DataUploadService(concurrency.upload);
     }
 
     async sync(clean: boolean) {
@@ -36,4 +35,4 @@ export default class DataSync {
 }
 
 config();
-new DataSync(100, 50,).sync(true);
+new DataSync(200, 50).sync(true);

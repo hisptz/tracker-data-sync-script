@@ -12,6 +12,7 @@ export interface DataExtractConfig {
     fields: string;
     skipPaging: false;
     totalPages: true;
+    concurrency: number;
 }
 
 
@@ -32,7 +33,6 @@ export default class DataExtractService {
         this.sourceURL = new URL(process.env.SOURCE_DHIS2_BASE_URL ?? "");
         this.http = new HTTPUtil(this.sourceURL, getHttpAuthorizationHeader(process.env.SOURCE_DHIS2_USERNAME ?? "", process.env.SOURCE_DHIS2_PASSWORD ?? ""));
         this.config = config;
-
         logger.info({
             message: `DataExtractService initialized: Source: ${this.sourceURL.href}`,
             fn: "DataExtractService",
@@ -120,13 +120,19 @@ export default class DataExtractService {
             });
 
             if (data) {
-                const fileName = await this.saveDataToFile(data, page);
+                const fileName = await this.saveDataToFile(data, `${page}`);
                 logger.info({
                     message: `Saved page ${page} to file: ${fileName}`,
                     fn: "getData",
                 })
                 if (uploadQueue) {
                     uploadQueue.push(`${fileName}`);
+                }
+
+                return {
+                    page,
+                    status: "success",
+                    message: "Successfully fetched data and saved to file",
                 }
             }
 
@@ -136,15 +142,23 @@ export default class DataExtractService {
                 stack: e.stack,
                 fn: "getData",
             });
+
+            return {
+                page,
+                status: "error",
+                message: e.message,
+            }
         }
     }
 
     async getAllData(pageCount: number, uploadQueue?: QueueObject<any>) {
         const pages = Array.from({length: pageCount}, (_, i) => i + 1);
-        await mapLimit(pages, 10, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config, uploadQueue)));
+        const responses = await mapLimit(pages, this.config.concurrency, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config, uploadQueue)));
+
+
     }
 
-    async saveDataToFile(data: any, page: number): Promise<string> {
+    async saveDataToFile(data: any, page: string): Promise<string> {
         const fileName = `${this.config.program}-${this.config.ou}-page-${page}`;
         return await FilesService.writeFile(fileName, data);
     }

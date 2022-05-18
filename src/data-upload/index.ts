@@ -9,12 +9,12 @@ export class DataUploadService {
     http: HTTPUtil;
     queue: QueueObject<any>;
 
-    constructor() {
+    constructor(concurrency: number) {
 
         this.uploadDataFromFile = this.uploadDataFromFile.bind(this);
         const url = new URL(process.env.DESTINATION_DHIS2_BASE_URL ?? "")
         this.http = new HTTPUtil(url, getHttpAuthorizationHeader(process.env.DESTINATION_DHIS2_USERNAME ?? "", process.env.DESTINATION_DHIS2_PASSWORD ?? ""));
-        this.queue = queue(asyncify(this.uploadDataFromFile));
+        this.queue = queue(asyncify(this.uploadDataFromFile), concurrency);
 
     }
 
