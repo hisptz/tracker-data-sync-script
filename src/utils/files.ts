@@ -1,4 +1,5 @@
 import fs from 'fs';
+import logger from "./logger";
 
 
 export default class FilesService {
@@ -43,6 +44,16 @@ export default class FilesService {
 
     static getFilePath(fileName: string): string {
         return `${this.folderName}/${fileName}${this.fileExtension}`;
+    }
+
+    static clearFiles(): void {
+        logger.info({
+            message: `Clearing files in ${this.folderName}`,
+            fn: "FilesService",
+        })
+        if (fs.existsSync(this.folderName)) {
+            fs.rmSync(this.folderName, {recursive: true});
+        }
     }
 
 }

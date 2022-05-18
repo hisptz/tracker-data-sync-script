@@ -2,7 +2,7 @@ import {Pagination} from "./interfaces/pagination";
 import {getHttpAuthorizationHeader, HTTPUtil} from "../utils/http";
 import logger from "../utils/logger";
 import {set} from "lodash";
-import {asyncify, map, mapLimit} from "async";
+import {asyncify, map, mapLimit, timeout} from "async";
 import FilesService from "../utils/files";
 
 export interface DataExtractConfig {
@@ -40,12 +40,10 @@ export default class DataExtractService {
     }
 
     async extractData() {
-
         const pagination = await this.getPagination();
         if (pagination) {
             await this.getAllData(pagination.pageCount);
         }
-
     }
 
     async getPagination(): Promise<Pagination | undefined> {
@@ -97,7 +95,22 @@ export default class DataExtractService {
                 message: `Fetching page ${page}`,
                 fn: "getData",
             })
-            const data: any = await http.get(endPoint, params);
+
+            const data: any = await new Promise<any>((resolve, reject) => {
+                timeout(asyncify(async () => await http.get(endPoint, params)), Number(process.env.DOWNLOAD_TIMEOUT), {})((error, data) => {
+                    if (error) {
+                        logger.error({
+                            message: error.message,
+                            stack: error.stack,
+                            fn: "getData",
+                        });
+                        reject(error);
+                    } else {
+                        resolve(data);
+                    }
+
+                })
+            });
 
             if (data) {
                 await this.saveDataToFile(data, page);
