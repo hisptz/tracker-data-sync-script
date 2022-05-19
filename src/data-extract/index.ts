@@ -112,6 +112,13 @@ export default class DataExtractService {
                             stack: error.stack,
                             fn: "getData",
                         });
+                        SummaryService.updateOrCreate(page, {
+                            page,
+                            download: {
+                                status: "timeout",
+                                message: "Request timed out"
+                            }
+                        })
                         reject(error);
                     } else {
                         resolve(data);
