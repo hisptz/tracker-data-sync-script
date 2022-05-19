@@ -50,13 +50,13 @@ program.name("tracker-data-sync")
     .version("1.0.0");
 
 program.command("sync")
-    .option("-d --duration <duration>", "Duration of the extraction in days", "30")
+    .option("-d --duration <duration>", "Duration of the extraction in days", undefined)
     .option("-p --page-size <page-size>", "Page size of the extraction", "50")
     .option("-u --upload-concurrency <upload-concurrency>", "Concurrency of the upload", "1")
     .option("-d --download-concurrency <download-concurrency>", "Concurrency of the download", "1")
     .action(async (arg) => {
 
-        const dataSync = new DataSync(Number(arg.duration), Number(arg.pageSize), {
+        const dataSync = new DataSync(arg.duration ? Number(arg.duration) : undefined, Number(arg.pageSize), {
             download: Number(arg.downloadConcurrency),
             upload: Number(arg.uploadConcurrency),
 
