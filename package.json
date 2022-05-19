@@ -1,6 +1,6 @@
 {
   "name": "tracker-data-sync-script",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "license": "MIT",
   "description": "A script to sync tracker data from one DHIS2 instance to another",
