@@ -32,8 +32,12 @@ export default class DataSync {
             await FilesService.clearFiles();
         }
         await SummaryService.init();
-        this.dataUploadService.setOnQueueComplete(async () => await SummaryService.sendSummary(this.dataExtractService.pageSize, this.dataExtractService.duration))
         await this.dataExtractService.extractAndUploadData(this.dataUploadService.getQueue());
+        this.dataUploadService.setOnQueueComplete(async () => {
+            setTimeout(async () => {
+                await SummaryService.sendSummary(this.dataExtractService.pageSize, this.dataExtractService.duration)
+            }, 3000);
+        })
     }
 
 }
@@ -44,7 +48,6 @@ const program = new Command();
 program.name("tracker-data-sync")
     .description("Sync tracker data between 2 DHIS2 instances")
     .version("1.0.0");
-
 
 program.command("sync")
     .option("-d --duration <duration>", "Duration of the extraction in days", "30")
@@ -60,7 +63,7 @@ program.command("sync")
         });
 
         console.info(`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency}`);
-        console.info("Warning: This will delete previously generated files");
+        console.warn("Warning: This will delete previously generated files");
         await dataSync.sync(true);
     });
 

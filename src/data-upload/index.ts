@@ -17,6 +17,7 @@ export class DataUploadService {
         this.queue = queue(asyncify(this.uploadDataFromFile), concurrency);
 
     }
+
     setOnQueueComplete(callback: () => Promise<void>) {
         this.queue.drain(callback);
     }
@@ -54,10 +55,16 @@ export class DataUploadService {
             fn: "uploadDataFromFile",
         })
         if (data) {
-            return await this.uploadData(data).then(() => {
+            return await this.uploadData(data).then((response: any) => {
                 logger.info({
                     message: `Data from file ${filePath} uploaded successfully`,
                     fn: "uploadDataFromFile",
+                })
+                return response;
+            }).catch((e: any) => {
+                logger.error({
+                    message: e.message,
+                    stack: e.stack
                 })
             });
         }

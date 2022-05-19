@@ -112,6 +112,7 @@ export default class DataExtractService {
                             stack: error.stack,
                             fn: "getData",
                         });
+                        SummaryService.updateDownloadSummary(page, "timeout")
                         reject(error);
                     } else {
                         resolve(data);
@@ -127,40 +128,16 @@ export default class DataExtractService {
                     fn: "getData",
                 })
                 if (uploadQueue) {
-                    uploadQueue.push(`${fileName}`).then(() => {
+                    uploadQueue.push(`${fileName}`).then((importSummary: any) => {
                         logger.info({
                             message: `Uploaded page ${page}`,
                             fn: "getData",
                         })
-                        SummaryService.updateOrCreate(page, {
-                            page,
-                            upload: {
-                                status: "success",
-                                message: "Uploaded",
-                            }
-                        })
-                    }).catch((e: any) => {
-                        SummaryService.updateOrCreate(page, {
-                            page,
-                            upload: {
-                                status: "error",
-                                message: e.message,
-                            }
-                        })
+                        SummaryService.updateUploadSummary(page, importSummary);
                     });
                 }
 
-                SummaryService.updateOrCreate(page, {
-                    page,
-                    download: {
-                        status: "success",
-                        message: "Successfully fetched data and saved to file"
-                    },
-                    upload: {
-                        status: "pending",
-                        message: "Waiting for upload"
-                    }
-                })
+                SummaryService.updateDownloadSummary(page, "success");
 
                 return {
                     page,
@@ -186,9 +163,7 @@ export default class DataExtractService {
 
     async getAllData(pageCount: number, uploadQueue?: QueueObject<any>) {
         const pages = Array.from({length: pageCount}, (_, i) => i + 1);
-        const responses = await mapLimit(pages, this.config.concurrency, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config, uploadQueue)));
-
-
+        await mapLimit(pages, this.config.concurrency, asyncify(async (page: number) => this.getData(page, this.http, this.pageSize, this.config, uploadQueue)));
     }
 
     async saveDataToFile(data: any, page: string): Promise<string> {
