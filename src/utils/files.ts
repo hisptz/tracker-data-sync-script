@@ -14,7 +14,6 @@ export default class FilesService {
         }
     }
 
-
     static async writeFile(fileName: string, data: any): Promise<string> {
         return new Promise((resolve, reject) => {
             const filePath = this.getFilePath(fileName);
@@ -37,7 +36,11 @@ export default class FilesService {
                 if (err) {
                     reject(err);
                 }
-                resolve(JSON.parse(data));
+                if (data) {
+                    resolve(JSON.parse(data));
+                } else {
+                    resolve({})
+                }
             });
         });
     }
