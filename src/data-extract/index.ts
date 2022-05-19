@@ -23,7 +23,7 @@ export default class DataExtractService {
     pageSize: number;
     config: DataExtractConfig;
 
-    sourceURL: URL;
+    sourceURL: string;
 
     http: HTTPUtil;
 
@@ -31,11 +31,11 @@ export default class DataExtractService {
     constructor(duration: number | undefined, pageSize: number | undefined, config: DataExtractConfig) {
         this.duration = duration;
         this.pageSize = pageSize ?? 50;
-        this.sourceURL = new URL(process.env.SOURCE_DHIS2_BASE_URL ?? "");
-        this.http = new HTTPUtil(this.sourceURL, getHttpAuthorizationHeader(process.env.SOURCE_DHIS2_USERNAME ?? "", process.env.SOURCE_DHIS2_PASSWORD ?? ""));
+        this.sourceURL = process.env.SOURCE_DHIS2_BASE_URL ?? ""
+        this.http = new HTTPUtil(process.env.SOURCE_DHIS2_BASE_URL ?? "", getHttpAuthorizationHeader(process.env.SOURCE_DHIS2_USERNAME ?? "", process.env.SOURCE_DHIS2_PASSWORD ?? ""));
         this.config = config;
         logger.info({
-            message: `DataExtractService initialized: Source: ${this.sourceURL.href}`,
+            message: `DataExtractService initialized: Source: ${this.sourceURL}`,
             fn: "DataExtractService",
         })
     }

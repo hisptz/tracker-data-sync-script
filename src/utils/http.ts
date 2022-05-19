@@ -17,17 +17,17 @@ export function getHttpAuthorizationHeader(
 
 export class HTTPUtil {
 
-    private url: URL | undefined;
+    private url: string | undefined;
     private readonly headers: any;
 
-    constructor(url: URL, headers: any) {
+    constructor(url: string, headers: any) {
         this.url = url;
         this.headers = headers;
     }
 
     async get(endPoint: string, params?: { [key: string]: any }) {
         return new Promise((resolve, reject) => {
-            const url = new URL(`/api/${endPoint}`, this.url?.href);
+            const url = new URL(`${this.url}/api/${endPoint}`, );
             for (const key in params) {
                 url?.searchParams.append(key, params[key]);
             }
@@ -58,7 +58,7 @@ export class HTTPUtil {
 
     async post(endPoint: string, data: any, params?: { [key: string]: any }) {
         return new Promise((resolve, reject) => {
-            const url = new URL(`/api/${endPoint}`, this.url?.href);
+            const url = new URL(`${this.url}/api/${endPoint}`);
             for (const key in params) {
                 url?.searchParams.append(key, params[key]);
             }
@@ -89,7 +89,7 @@ export class HTTPUtil {
 
     async delete(endPoint: string) {
         return new Promise((resolve, reject) => {
-            const url = new URL(`/api/${endPoint}`, this.url?.href);
+            const url = new URL(`/api/${endPoint}`, this.url);
             request(
                 {
                     headers: this.headers,
@@ -116,7 +116,7 @@ export class HTTPUtil {
 
     async put(endPoint: string, data: any, params?: { [key: string]: any }) {
         return new Promise((resolve, reject) => {
-            const url = new URL(`/api/${endPoint}`, this.url?.href);
+            const url = new URL(`/api/${endPoint}`, this.url);
             for (const key in params) {
                 url?.searchParams.append(key, params[key]);
             }
