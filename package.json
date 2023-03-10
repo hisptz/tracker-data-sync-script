@@ -5,12 +5,13 @@
   "license": "MIT",
   "description": "A script to sync tracker data from one DHIS2 instance to another",
   "dependencies": {
+    "@hisptz/dhis2-utils": "^1.0.32",
     "async": "^3.2.3",
     "axios": "^0.27.2",
     "commander": "^9.2.0",
     "dotenv": "^16.0.1",
     "lodash": "^4.17.21",
-    "luxon": "^2.4.0",
+    "luxon": "^3.3.0",
     "request": "^2.88.2",
     "shelljs": "^0.8.5",
     "winston": "^3.7.2"

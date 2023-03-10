@@ -2,24 +2,28 @@ import {Pagination} from "./interfaces/pagination";
 import {getHttpAuthorizationHeader, HTTPUtil} from "../utils/http";
 import logger from "../utils/logger";
 import {set} from "lodash";
-import {asyncify, map, mapLimit, QueueObject, timeout} from "async";
+import {asyncify, mapLimit, QueueObject, timeout} from "async";
 import FilesService from "../utils/files";
 import SummaryService from "../summary";
+import {DataMapper, DataMapperConfig} from "../data-mapper";
 
 export interface DataExtractConfig {
     program: string;
-    ou: string;
+    ou?: string;
     ouMode: string;
     fields: string;
     skipPaging: false;
     totalPages: true;
     concurrency: number;
+
 }
 
 
 export default class DataExtractService {
 
     duration: number | undefined;
+
+    mapping?: DataMapperConfig;
     pageSize: number;
     config: DataExtractConfig;
 
@@ -28,12 +32,13 @@ export default class DataExtractService {
     http: HTTPUtil;
 
 
-    constructor(duration: number | undefined, pageSize: number | undefined, config: DataExtractConfig) {
+    constructor(duration: number | undefined, pageSize: number | undefined, config: DataExtractConfig, mapper?: DataMapperConfig) {
         this.duration = duration;
         this.pageSize = pageSize ?? 50;
         this.sourceURL = process.env.SOURCE_DHIS2_BASE_URL ?? ""
         this.http = new HTTPUtil(process.env.SOURCE_DHIS2_BASE_URL ?? "", getHttpAuthorizationHeader(process.env.SOURCE_DHIS2_USERNAME ?? "", process.env.SOURCE_DHIS2_PASSWORD ?? ""));
         this.config = config;
+        this.mapping = mapper
         logger.info({
             message: `DataExtractService initialized: Source: ${this.sourceURL}`,
             fn: "DataExtractService",
@@ -90,6 +95,7 @@ export default class DataExtractService {
 
     async getData(page: number, http: HTTPUtil, pageSize: number, config: DataExtractConfig, uploadQueue?: QueueObject<any>) {
         try {
+            const mapper = this.mapping ? new DataMapper(this.mapping) : undefined
             const endPoint = `trackedEntityInstances`;
             const params = {
                 page,
@@ -122,7 +128,14 @@ export default class DataExtractService {
             });
 
             if (data) {
-                const fileName = await this.saveDataToFile(data, `${page}`);
+                let updatedData = {...data};
+                if (mapper) {
+                    logger.info({
+                        message: `Mapping data as specified in mapper`
+                    });
+                    set(updatedData, 'trackedEntityInstances', mapper.map(data?.trackedEntityInstances))
+                }
+                const fileName = await this.saveDataToFile(updatedData, `${page}`);
                 logger.info({
                     message: `Saved page ${page} to file: ${fileName}`,
                     fn: "getData",
