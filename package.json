@@ -5,6 +5,7 @@
   "license": "MIT",
   "description": "A script to sync tracker data from one DHIS2 instance to another",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.0",
     "async": "^3.2.5",
     "axios": "^1.6.7",
     "commander": "^12.0.0",
