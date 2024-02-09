@@ -1,71 +1,90 @@
-import {getHttpAuthorizationHeader, HTTPUtil} from "../utils/http";
+import { HTTPClient } from "../utils/http";
 import FilesService from "../utils/files";
-import {asyncify, QueueObject, queue} from "async";
+import { asyncify, queue, QueueObject } from "async";
 import logger from "../utils/logger";
 
-
 export class DataUploadService {
+	http: HTTPClient;
+	queue: QueueObject<any>;
 
-    http: HTTPUtil;
-    queue: QueueObject<any>;
+	constructor(concurrency: number) {
+		this.uploadDataFromFile = this.uploadDataFromFile.bind(this);
 
-    constructor(concurrency: number) {
+		const baseURL = process.env.DESTINATION_DHIS2_BASE_URL;
+		const username = process.env.DESTINATION_DHIS2_USERNAME;
+		const password = process.env.DESTINATION_DHIS2_PASSWORD;
 
-        this.uploadDataFromFile = this.uploadDataFromFile.bind(this);
-        this.http = new HTTPUtil(process.env.DESTINATION_DHIS2_BASE_URL ?? "", getHttpAuthorizationHeader(process.env.DESTINATION_DHIS2_USERNAME ?? "", process.env.DESTINATION_DHIS2_PASSWORD ?? ""));
-        this.queue = queue(asyncify(this.uploadDataFromFile), concurrency);
+		if (!baseURL) {
+			throw Error("Missing destination DHIS2 URL");
+		}
 
-    }
+		if (!username) {
+			throw Error("Missing destination username");
+		}
 
-    setOnQueueComplete(callback: () => Promise<void>) {
-        this.queue.drain(callback);
-    }
+		if (!password) {
+			throw Error("Missing destination password");
+		}
 
-    cancelUpload() {
-        this.queue.kill();
-    }
+		this.http = new HTTPClient({
+			baseURL,
+			username,
+			password,
+		});
+		this.queue = queue(asyncify(this.uploadDataFromFile), concurrency);
+	}
 
-    pauseUpload() {
-        this.queue.pause();
-    }
+	setOnQueueComplete(callback: () => Promise<void>) {
+		this.queue.drain(callback);
+	}
 
-    getQueue() {
-        return this.queue;
-    }
+	cancelUpload() {
+		this.queue.kill();
+	}
 
-    async uploadData(data: any) {
-        try {
-            const endPoint = `trackedEntityInstances`;
-            return await this.http.post(endPoint, data, {
-                strategy: "CREATE_AND_UPDATE",
-            });
-        } catch (e: any) {
-            logger.error({
-                message: `Error uploading data to destination: ${e.message}`,
-                fn: "uploadData",
-            })
-        }
-    }
+	pauseUpload() {
+		this.queue.pause();
+	}
 
-    async uploadDataFromFile(filePath: string) {
-        const data = await FilesService.readFile(filePath);
-        logger.info({
-            message: `Uploading data from file: ${filePath}`,
-            fn: "uploadDataFromFile",
-        })
-        if (data) {
-            return await this.uploadData(data).then((response: any) => {
-                logger.info({
-                    message: `Data from file ${filePath} uploaded successfully`,
-                    fn: "uploadDataFromFile",
-                })
-                return response;
-            }).catch((e: any) => {
-                logger.error({
-                    message: e.message,
-                    stack: e.stack
-                })
-            });
-        }
-    }
+	getQueue() {
+		return this.queue;
+	}
+
+	async uploadData(data: any) {
+		try {
+			const endPoint = `trackedEntityInstances`;
+			return await this.http.post(endPoint, data, {
+				strategy: "CREATE_AND_UPDATE",
+			});
+		} catch (e: any) {
+			logger.error({
+				message: `Error uploading data to destination: ${e.message}`,
+				fn: "uploadData",
+			});
+		}
+	}
+
+	async uploadDataFromFile(filePath: string) {
+		const data = await FilesService.readFile(filePath);
+		logger.info({
+			message: `Uploading data from file: ${filePath}`,
+			fn: "uploadDataFromFile",
+		});
+		if (data) {
+			return await this.uploadData(data)
+				.then((response: any) => {
+					logger.info({
+						message: `Data from file ${filePath} uploaded successfully`,
+						fn: "uploadDataFromFile",
+					});
+					return response;
+				})
+				.catch((e: any) => {
+					logger.error({
+						message: e.message,
+						stack: e.stack,
+					});
+				});
+		}
+	}
 }
