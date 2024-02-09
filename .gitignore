@@ -121,3 +121,4 @@ data/
 /app/
 *.zip
 /build/
+/config.json
