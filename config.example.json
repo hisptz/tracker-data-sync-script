@@ -1,0 +1,33 @@
+{
+  "source": {
+    "username": "<username>",
+    "password": "<password>",
+    "baseURL": "http://baseurl"
+  },
+  "destination": {
+    "username": "<username>",
+    "password": "<password>",
+    "baseURL": "http://baseurl"
+  },
+  "flowConfig": {
+    "downloadTimeout": 10000,
+    "uploadTimeout": 10000
+  },
+  "dataConfig": {
+    "program": "<programID>",
+    "organisationUnit": "<parent-org-unit-id>"
+  },
+  "notificationConfig": {
+    "enabled": true,
+    "emailSubject": "Data Sync Summary",
+    "recipients": [
+      "admin@example.com"
+    ],
+    "sendGridKey": "SG.VXXXXXXXX",
+    "from": {
+      "name": "Tracker Data Sync Script",
+      "email": "admin@example.org"
+    }
+  }
+}
+

@@ -2,6 +2,7 @@ import { HTTPClient } from "../utils/http";
 import FilesService from "../utils/files";
 import { asyncify, queue, QueueObject } from "async";
 import logger from "../utils/logger";
+import { AppConfig } from "../utils/config";
 
 export class DataUploadService {
 	http: HTTPClient;
@@ -10,9 +11,9 @@ export class DataUploadService {
 	constructor(concurrency: number) {
 		this.uploadDataFromFile = this.uploadDataFromFile.bind(this);
 
-		const baseURL = process.env.DESTINATION_DHIS2_BASE_URL;
-		const username = process.env.DESTINATION_DHIS2_USERNAME;
-		const password = process.env.DESTINATION_DHIS2_PASSWORD;
+		const appConfig = AppConfig.getConfig();
+
+		const { baseURL, username, password } = appConfig.destination;
 
 		if (!baseURL) {
 			throw Error("Missing destination DHIS2 URL");
