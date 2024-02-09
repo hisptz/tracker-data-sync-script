@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import DataExtractService from "./data-extract";
 import { config } from "dotenv";
 import FilesService from "./utils/files";
