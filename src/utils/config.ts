@@ -1,17 +1,26 @@
 import { z } from "zod";
 import fs from "fs";
 
+const dhis2ConnectionSchema = z.object({
+	username: z.string(),
+	password: z.string(),
+	baseURL: z.string(),
+});
+
+const notificationConfigSchema = z.object({
+	enabled: z.boolean(),
+	emailSubject: z.string(),
+	recipients: z.array(z.string().email()),
+	sendGridKey: z.string(),
+	from: z.object({
+		name: z.string(),
+		email: z.string().email(),
+	}),
+});
+
 const appConfigPayloadSchema = z.object({
-	source: z.object({
-		username: z.string(),
-		password: z.string(),
-		baseURL: z.string(),
-	}),
-	destination: z.object({
-		username: z.string(),
-		password: z.string(),
-		baseURL: z.string(),
-	}),
+	source: dhis2ConnectionSchema,
+	destination: dhis2ConnectionSchema,
 	flowConfig: z.object({
 		downloadTimeout: z.number(),
 		uploadTimeout: z.number(),
@@ -20,34 +29,28 @@ const appConfigPayloadSchema = z.object({
 		program: z.string(),
 		organisationUnit: z.string(),
 	}),
-	notificationConfig: z.object({
-		enabled: z.boolean(),
-		emailSubject: z.string(),
-		recipients: z.array(z.string()),
-	}),
+	notificationConfig: notificationConfigSchema,
 });
 
 type AppConfigPayload = z.infer<typeof appConfigPayloadSchema>;
+type DHIS2Connection = z.infer<typeof dhis2ConnectionSchema>;
+type NotificationConfig = z.infer<typeof notificationConfigSchema>;
 
 export class AppConfig {
 	private static instance: AppConfig;
 
 	// @ts-ignore
-	source: { baseURL: string; username: string; password: string };
+	source: DHIS2Connection;
 	// @ts-ignore
 
-	destination: { baseURL: string; username: string; password: string };
+	destination: DHIS2Connection;
 
 	downloadTimeout: number = 10000;
 	uploadTimeout: number = 10000;
 	// @ts-ignore
 	dataConfig: { program: string; organisationUnit: string };
 
-	notification?: {
-		enabled: boolean;
-		emailSubject: string;
-		recipients: string[];
-	};
+	notification?: NotificationConfig;
 
 	public static getConfig(): AppConfig {
 		return this.getInstance();
@@ -108,6 +111,11 @@ export class AppConfig {
 				emailSubject: process.env.EMAIL_SUBJECT as string,
 				enabled: process.env.ENABLE_NOTIFICATIONS === "true" ?? false,
 				recipients: JSON.parse(process.env.EMAIL_RECIPIENTS ?? "[]"),
+				sendGridKey: process.env.SENDGRID_API_KEY as string,
+				from: {
+					email: process.env.EMAIL_FROM_EMAIL as string,
+					name: process.env.EMAIL_FROM_NAME as string,
+				},
 			},
 		};
 	}

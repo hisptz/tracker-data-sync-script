@@ -1,65 +1,72 @@
 import shell from "shelljs";
 import sgMail from "@sendgrid/mail";
+import { AppConfig } from "./config";
 
 abstract class EmailAdapter {
 	abstract sendMail({
 		message,
-		attachments,
 		subject,
 		emails,
 	}: {
 		emails: string[];
 		message: string;
 		subject: string;
-		attachments: string;
 	}): Promise<void>;
 }
 
 export class SnailEmailService extends EmailAdapter {
 	async sendMail({
 		message,
-		attachments,
 		subject,
 		emails,
 	}: {
 		emails: string[];
 		message: string;
 		subject: string;
-		attachments: string;
 	}): Promise<void> {
 		const command =
-			`echo "${message}" | s-nail -s ${subject} ` +
-			(attachments ? `-a ${attachments}` : "") +
-			` ${emails}`;
+			`echo "${message}" | s-nail -s ${subject} ` + ` ${emails}`;
 		shell.exec(command);
 	}
 }
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY ?? "");
-
 export class SendGridEmailService extends EmailAdapter {
+	constructor() {
+		super();
+		const appConfig = AppConfig.getConfig();
+		const apiKey = appConfig.notification?.sendGridKey;
+		if (!apiKey) {
+			throw Error("Missing Sendgrid API Key");
+		}
+		sgMail.setApiKey(apiKey);
+	}
+
 	async sendMail({
 		message,
-		attachments,
 		subject,
 		emails,
 	}: {
 		emails: string[];
 		message: string;
 		subject: string;
-		attachments: string;
 	}): Promise<void> {
+		const appConfig = AppConfig.getConfig();
+
+		const { from } = appConfig.notification ?? {
+			from: { email: "", name: "" },
+		};
+
 		const messagePayload = {
 			to: emails,
-			from: `${process.env.EMAIL_SENDER}`,
+			from,
 			subject,
 			text: message,
 		};
 
 		try {
 			await sgMail.send(messagePayload);
-		} catch (e) {
-			console.error(e);
+		} catch (e: any) {
+			console.error(e.response.body);
 			throw e;
 		}
 	}

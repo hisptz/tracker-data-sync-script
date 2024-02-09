@@ -9,6 +9,7 @@ import NotificationsUtil from "../utils/notification";
 import { Duration } from "luxon";
 import logger from "../utils/logger";
 import { compact, flattenDeep, isEmpty } from "lodash";
+import { AppConfig } from "../utils/config";
 
 export default class SummaryService {
 	static async updateUploadSummary(
@@ -111,17 +112,19 @@ export default class SummaryService {
 
 	static async sendSummary(pageSize: number, duration?: number) {
 		try {
+			const appConfig = AppConfig.getConfig();
 			await this.finishSummary();
 			const { hours, minutes, seconds } =
 				(await this.getTimeTaken()) ?? {};
-			const attachmentPath = FilesService.getFilePath("summary");
-			const message = `Summary for data sync for ${duration === undefined ? "all" : duration} days with page size ${pageSize}. \n Time taken: ${hours} hours, ${minutes} minutes and ${seconds} seconds.`;
-
-			logger.info({
-				message,
-				fn: "sendSummary",
-			});
-			NotificationsUtil.send(message, attachmentPath);
+			if (appConfig.notification?.enabled) {
+				const attachmentPath = FilesService.getFilePath("summary");
+				const message = `Summary for data sync for ${duration === undefined ? "all" : duration} days with page size ${pageSize}. \n Time taken: ${hours} hours, ${minutes} minutes and ${seconds} seconds.`;
+				logger.info({
+					message,
+					fn: "sendSummary",
+				});
+				NotificationsUtil.send(message, attachmentPath);
+			}
 		} catch (e: any) {
 			logger.error({
 				message: e.message,
