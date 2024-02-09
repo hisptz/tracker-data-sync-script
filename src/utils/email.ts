@@ -1,4 +1,5 @@
 import shell from "shelljs";
+import sgMail from "@sendgrid/mail";
 
 abstract class EmailAdapter {
 	abstract sendMail({
@@ -14,7 +15,7 @@ abstract class EmailAdapter {
 	}): Promise<void>;
 }
 
-class SnailEmailService extends EmailAdapter {
+export class SnailEmailService extends EmailAdapter {
 	async sendMail({
 		message,
 		attachments,
@@ -34,7 +35,9 @@ class SnailEmailService extends EmailAdapter {
 	}
 }
 
-class SendGridEmailService extends EmailAdapter {
+sgMail.setApiKey(process.env.SENDGRID_API_KEY ?? "");
+
+export class SendGridEmailService extends EmailAdapter {
 	async sendMail({
 		message,
 		attachments,
@@ -52,5 +55,12 @@ class SendGridEmailService extends EmailAdapter {
 			subject,
 			text: message,
 		};
+
+		try {
+			await sgMail.send(messagePayload);
+		} catch (e) {
+			console.error(e);
+			throw e;
+		}
 	}
 }

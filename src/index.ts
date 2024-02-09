@@ -4,6 +4,7 @@ import FilesService from "./utils/files";
 import { DataUploadService } from "./data-upload";
 import SummaryService from "./summary";
 import { Command } from "commander";
+import { AppConfig } from "./utils/config";
 
 export default class DataSync {
 	dataUploadService: DataUploadService;
@@ -17,10 +18,11 @@ export default class DataSync {
 			upload: 1,
 		},
 	) {
+		const config = AppConfig.getConfig();
 		this.dataExtractService = new DataExtractService(duration, pageSize, {
-			program: process.env.PROGRAM_ID ?? "",
+			program: config.dataConfig.program ?? "",
 			fields: ":all,attributes[:all,attribute,code,value],enrollments[*],orgUnit,trackedEntityInstance",
-			ou: process.env.ORGANISATION_UNIT_ID ?? "",
+			ou: config.dataConfig.organisationUnit ?? "",
 			totalPages: true,
 			skipPaging: false,
 			ouMode: "DESCENDANTS",
@@ -31,7 +33,7 @@ export default class DataSync {
 
 	async sync(clean: boolean) {
 		if (clean) {
-			await FilesService.clearFiles();
+			FilesService.clearFiles();
 		}
 		await SummaryService.init();
 		await this.dataExtractService.extractAndUploadData(
@@ -73,7 +75,13 @@ program
 		"Concurrency of the download",
 		"1",
 	)
+	.option(
+		"--config <string>",
+		"Absolute location of the configuration JSON file ",
+	)
 	.action(async (arg) => {
+		await AppConfig.initialize(arg.config);
+
 		const dataSync = new DataSync(
 			arg.duration ? Number(arg.duration) : undefined,
 			Number(arg.pageSize),

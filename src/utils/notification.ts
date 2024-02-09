@@ -1,16 +1,20 @@
-import shell from 'shelljs';
+import shell from "shelljs";
+import { SendGridEmailService } from "./email";
 
 export default class NotificationsUtil {
-    static sendEmail(message: string, attachmentDir: string) {
-        const command =
-            `echo "${message}" | s-nail -s ${process.env.EMAIL_SUBJECT} ` +
-            (attachmentDir ? `-a ${attachmentDir}` : "") +
-            ` ${process.env.EMAILS}`;
-        shell.exec(command);
-    }
+	emailAdapter = new SendGridEmailService();
 
+	static sendEmail(message: string, attachmentDir: string) {
+		const emails = process.env.EMAILS;
 
-    static send(message: string, attachmentPath: string) {
-        this.sendEmail(message, attachmentPath);
-    }
+		const command =
+			`echo "${message}" | s-nail -s ${process.env.EMAIL_SUBJECT} ` +
+			(attachmentDir ? `-a ${attachmentDir}` : "") +
+			` ${process.env.EMAILS}`;
+		shell.exec(command);
+	}
+
+	static send(message: string, attachmentPath: string) {
+		this.sendEmail(message, attachmentPath);
+	}
 }

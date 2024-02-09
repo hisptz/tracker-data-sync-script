@@ -5,6 +5,7 @@ import { set } from "lodash";
 import { asyncify, mapLimit, QueueObject, timeout } from "async";
 import FilesService from "../utils/files";
 import SummaryService from "../summary";
+import { AppConfig } from "../utils/config";
 
 export interface DataExtractConfig {
 	program: string;
@@ -31,9 +32,9 @@ export default class DataExtractService {
 		this.duration = duration;
 		this.pageSize = pageSize ?? 50;
 
-		const baseURL = process.env.SOURCE_DHIS2_BASE_URL;
-		const username = process.env.SOURCE_DHIS2_USERNAME;
-		const password = process.env.SOURCE_DHIS2_PASSWORD;
+		const appConfig = AppConfig.getConfig();
+
+		const { baseURL, username, password } = appConfig.source;
 
 		if (!baseURL) {
 			throw Error("Missing source DHIS2 URL");
@@ -114,6 +115,7 @@ export default class DataExtractService {
 		uploadQueue?: QueueObject<any>,
 	) {
 		try {
+			const appConfig = AppConfig.getConfig();
 			const endPoint = `trackedEntityInstances`;
 			const params = {
 				page,
@@ -131,7 +133,7 @@ export default class DataExtractService {
 			const data: any = await new Promise<any>((resolve, reject) => {
 				timeout(
 					asyncify(async () => await http.get(endPoint, params)),
-					Number(process.env.DOWNLOAD_TIMEOUT),
+					Number(appConfig.downloadTimeout),
 					{},
 				)((error, data) => {
 					if (error) {
