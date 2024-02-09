@@ -1,8 +1,8 @@
 {
   "name": "@hisptz/dhis2-tracker-data-sync",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.0.1",
   "license": "MIT",
+  "author": "HISP Tanzania<dev@hisptanzania.org>",
   "bin": {
     "tracker-data-sync": "./dist/index.js"
   },
