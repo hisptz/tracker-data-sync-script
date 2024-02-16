@@ -1,14 +1,18 @@
 #!/bin/bash
 
 APP_VERSION=$(node -p -e "require('./package.json').version")
+APP_NAME=$(node -p -e "require('./package.json').pkgName")
 
-PACKAGE_NAME=tracker-data-sync-script-"$APP_VERSION".zip
+PACKAGE_NAME=$APP_NAME-"$APP_VERSION".zip
 
-cp package.json .env.example build/app/
-cd build/app || return
+rm -r bundle/
+
+cp package.json .env.example dist/
+cd dist/ || return
 
 zip -r "$PACKAGE_NAME" .
 
-mv "$PACKAGE_NAME" ../
+mkdir ../bundle
+mv "$PACKAGE_NAME" ../bundle
 
-cd ../../
+cd ../

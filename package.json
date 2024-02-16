@@ -1,8 +1,17 @@
 {
-  "name": "tracker-data-sync-script",
-  "version": "1.0.1",
-  "main": "index.js",
+  "name": "@hisptz/dhis2-tracker-data-sync",
+  "pkgName": "tracker-data-sync",
+  "version": "1.0.2",
   "license": "MIT",
+  "author": "HISP Tanzania<dev@hisptanzania.org>",
+  "bin": {
+    "tracker-data-sync": "./dist/index.js"
+  },
+  "files": [
+    "dist/**",
+    "package.json",
+    "README.md"
+  ],
   "description": "A script to sync tracker data from one DHIS2 instance to another",
   "dependencies": {
     "@sendgrid/mail": "^8.1.0",
@@ -26,13 +35,18 @@
     "prettier": "^3.2.5",
     "ts-loader": "^9.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "webpack": "^5.72.1",
-    "webpack-cli": "^4.9.2"
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
   },
   "scripts": {
     "start": "ts-node src/index.ts",
-    "build": "yarn webpack",
+    "build": "tsup-node",
     "postbuild": "./package.sh"
+  },
+  "repository": {
+    "url": "https://github.com/hisptz/tracker-data-sync-script"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

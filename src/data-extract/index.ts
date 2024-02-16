@@ -142,7 +142,11 @@ export default class DataExtractService {
 							stack: error.stack,
 							fn: "getData",
 						});
-						SummaryService.updateDownloadSummary(page, "timeout");
+						SummaryService.updateDownloadSummary(
+							page,
+							0,
+							"timeout",
+						);
 						reject(error);
 					} else {
 						resolve(data);
@@ -171,7 +175,12 @@ export default class DataExtractService {
 						});
 				}
 
-				SummaryService.updateDownloadSummary(page, "success");
+				const count = data["trackedEntityInstances"].length;
+				await SummaryService.updateDownloadSummary(
+					page,
+					count,
+					"success",
+				);
 
 				return {
 					page,

@@ -122,3 +122,4 @@ data/
 *.zip
 /build/
 /config.json
+/bundle/
