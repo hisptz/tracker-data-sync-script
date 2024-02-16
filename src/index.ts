@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import DataExtractService from "./data-extract";
-import { config } from "dotenv";
 import FilesService from "./utils/files";
 import { DataUploadService } from "./data-upload";
 import SummaryService from "./summary";
 import { Command } from "commander";
-import { AppConfig } from "./utils/config";
+import { AppConfig, paramsSchema } from "./utils/config";
+import packageJson from "../package.json";
 
 export default class DataSync {
 	dataUploadService: DataUploadService;
@@ -42,10 +42,7 @@ export default class DataSync {
 		);
 		this.dataUploadService.setOnQueueComplete(async () => {
 			setTimeout(async () => {
-				await SummaryService.sendSummary(
-					this.dataExtractService.pageSize,
-					this.dataExtractService.duration,
-				);
+				await SummaryService.sendSummary();
 			}, 3000);
 		});
 	}
@@ -56,14 +53,14 @@ const program = new Command();
 program
 	.name("tracker-data-sync")
 	.description("Sync tracker data between 2 DHIS2 instances")
-	.version("1.0.0");
+	.version(packageJson.version);
 
 program
 	.command("sync")
 	.option(
 		"-d --duration <duration>",
 		"Duration of the extraction in days",
-		undefined,
+		"1",
 	)
 	.option("-p --page-size <page-size>", "Page size of the extraction", "50")
 	.option(
@@ -81,22 +78,35 @@ program
 		"Absolute location of the configuration JSON file ",
 	)
 	.action(async (arg) => {
-		await AppConfig.initialize(arg.config);
+		try {
+			const parsedArgs = paramsSchema.parse(arg);
+			await AppConfig.initialize(parsedArgs);
+			const dataSync = new DataSync(
+				arg.duration ? Number(arg.duration) : undefined,
+				Number(arg.pageSize),
+				{
+					download: Number(arg.downloadConcurrency),
+					upload: Number(arg.uploadConcurrency),
+				},
+			);
 
-		const dataSync = new DataSync(
-			arg.duration ? Number(arg.duration) : undefined,
-			Number(arg.pageSize),
-			{
-				download: Number(arg.downloadConcurrency),
-				upload: Number(arg.uploadConcurrency),
-			},
-		);
-
-		console.info(
-			`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency}`,
-		);
-		console.warn("Warning: This will delete previously generated files");
-		await dataSync.sync(true);
+			console.info(
+				`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency},
+			);
+			console.warn("This will delete previously generated files");
+			await dataSync.sync(true);
+		} catch (error: unknown) {
+			if (error instanceof ZodError) {
+				error.errors.forEach((e: any) => {
+					logger.error({
+						message: `${capitalize(e.code.replaceAll("_", " "))}. Expected ${e.expected} but received ${e.received} at ${e.path.join(".")}`,
+					});
+				});
+			} else {
+				logger.error(error);
+			}
+			process.exit(1);
+		}
 	});
 
 config();

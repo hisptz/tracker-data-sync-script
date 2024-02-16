@@ -4,7 +4,7 @@ import { isEmpty } from "lodash";
 import logger from "./logger";
 
 export default class NotificationsUtil {
-	static async sendEmail(message: string, attachmentDir: string) {
+	static async sendEmail(message: string) {
 		const appConfig = AppConfig.getConfig();
 
 		const emailAdapter = new SendGridEmailService();
@@ -25,7 +25,8 @@ export default class NotificationsUtil {
 			subject: subject ?? "Tracker Data Sync Script",
 		});
 	}
-	static send(message: string, attachmentPath: string) {
-		this.sendEmail(message, attachmentPath);
+
+	static send(message: string) {
+		return this.sendEmail(message);
 	}
 }

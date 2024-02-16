@@ -1,6 +1,31 @@
 import { z } from "zod";
 import fs from "fs";
 
+export const paramsSchema = z.object({
+	duration: z
+		.string()
+		.transform((val) => Number(val))
+		.optional(),
+	pageSize: z
+		.string()
+		.transform((val) => Number(val))
+		.optional(),
+	uploadConcurrency: z
+		.string()
+		.transform((val) => Number(val))
+		.optional(),
+	downloadConcurrency: z
+		.string()
+		.transform((val) => Number(val))
+		.optional(),
+	config: z
+		.string()
+		.refine((value) => {
+			return fs.existsSync(value);
+		}, `The configuration file does not exist`)
+		.optional(),
+});
+
 const dhis2ConnectionSchema = z.object({
 	username: z.string(),
 	password: z.string(),
@@ -35,12 +60,15 @@ const appConfigPayloadSchema = z.object({
 type AppConfigPayload = z.infer<typeof appConfigPayloadSchema>;
 type DHIS2Connection = z.infer<typeof dhis2ConnectionSchema>;
 type NotificationConfig = z.infer<typeof notificationConfigSchema>;
+type Params = z.infer<typeof paramsSchema>;
 
 export class AppConfig {
 	private static instance: AppConfig;
 
 	// @ts-ignore
 	source: DHIS2Connection;
+
+	params?: Params;
 	// @ts-ignore
 
 	destination: DHIS2Connection;
@@ -63,11 +91,12 @@ export class AppConfig {
 		return AppConfig.instance;
 	}
 
-	public static async initialize(configLocation?: string): Promise<void> {
+	public static async initialize(args: Params): Promise<void> {
 		const config = new AppConfig();
+		config.params = args;
 		let rawConfig = {};
-		if (configLocation) {
-			rawConfig = await this.getConfigFromJSON(configLocation);
+		if (args.config) {
+			rawConfig = await this.getConfigFromJSON(args.config);
 		} else {
 			rawConfig = this.getConfigFromEnv();
 		}
@@ -75,7 +104,8 @@ export class AppConfig {
 		const validatedRawConfig = appConfigPayloadSchema.safeParse(rawConfig);
 
 		if (!validatedRawConfig.success) {
-			throw validatedRawConfig.error.message;
+			// console.log({ configError: validatedRawConfig.error });
+			throw validatedRawConfig.error;
 		}
 
 		this.setConfigFromRawConfig(config, validatedRawConfig.data);

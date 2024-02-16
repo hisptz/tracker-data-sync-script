@@ -5,11 +5,11 @@ import {
 	Summary,
 } from "./interfaces";
 import FilesService from "../utils/files";
-import NotificationsUtil from "../utils/notification";
 import { Duration } from "luxon";
 import logger from "../utils/logger";
 import { compact, flattenDeep, isEmpty } from "lodash";
 import { AppConfig } from "../utils/config";
+import NotificationsUtil from "../utils/notification";
 
 export default class SummaryService {
 	static async updateUploadSummary(
@@ -44,6 +44,7 @@ export default class SummaryService {
 
 	static async updateDownloadSummary(
 		page: number,
+		count: number,
 		status: "success" | "error" | "timeout",
 	) {
 		if (page && status) {
@@ -69,7 +70,7 @@ export default class SummaryService {
 						errors += 1;
 						break;
 					case "success":
-						downloaded += 1;
+						downloaded += count;
 						break;
 					default:
 						break;
@@ -110,20 +111,43 @@ export default class SummaryService {
 		return await FilesService.writeFile("summary", updatedSummary);
 	}
 
-	static async sendSummary(pageSize: number, duration?: number) {
+	static async getSummaryMessage(): Promise<string> {
+		const appConfig = AppConfig.getConfig();
+		const { hours, minutes, seconds } = (await this.getTimeTaken()) ?? {};
+
+		const duration = appConfig.params?.duration;
+		const pageSize = appConfig.params?.pageSize;
+
+		const summary = await FilesService.readFile("summary");
+		return `
+		Summary for data sync for ${duration === undefined ? "all" : duration} days with page size ${pageSize}. 
+		Time taken: ${hours} hours, ${minutes} minutes and ${seconds} seconds.
+		Summary:
+	
+		Download:
+		    Downloaded: ${summary.download.downloaded}
+		    Errors: ${summary.download.errors}
+		    Timed out: ${summary.download.timedOut}
+		    
+		Upload: 
+		    Imported: ${summary.upload.imported}
+		    Updated: ${summary.upload.updated}
+		    Errors: ${summary.download.errors}
+		    Timed out: ${summary.download.timedOut}
+		`;
+	}
+
+	static async sendSummary() {
 		try {
 			const appConfig = AppConfig.getConfig();
 			await this.finishSummary();
-			const { hours, minutes, seconds } =
-				(await this.getTimeTaken()) ?? {};
+			const message = await this.getSummaryMessage();
 			if (appConfig.notification?.enabled) {
-				const attachmentPath = FilesService.getFilePath("summary");
-				const message = `Summary for data sync for ${duration === undefined ? "all" : duration} days with page size ${pageSize}. \n Time taken: ${hours} hours, ${minutes} minutes and ${seconds} seconds.`;
 				logger.info({
 					message,
 					fn: "sendSummary",
 				});
-				NotificationsUtil.send(message, attachmentPath);
+				await NotificationsUtil.send(message);
 			}
 		} catch (e: any) {
 			logger.error({
