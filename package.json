@@ -1,7 +1,7 @@
 {
   "name": "@hisptz/dhis2-tracker-data-sync",
   "pkgName": "tracker-data-sync",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "author": "HISP Tanzania<dev@hisptanzania.org>",
   "bin": {
