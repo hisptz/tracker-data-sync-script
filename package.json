@@ -40,8 +40,7 @@
   },
   "scripts": {
     "start": "ts-node src/index.ts",
-    "build": "tsup-node",
-    "postbuild": "./package.sh"
+    "build": "tsup-node"
   },
   "repository": {
     "url": "https://github.com/hisptz/tracker-data-sync-script"
