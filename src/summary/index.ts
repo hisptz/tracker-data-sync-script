@@ -44,6 +44,7 @@ export default class SummaryService {
 
 	static async updateDownloadSummary(
 		page: number,
+		count: number,
 		status: "success" | "error" | "timeout",
 	) {
 		if (page && status) {
@@ -69,7 +70,7 @@ export default class SummaryService {
 						errors += 1;
 						break;
 					case "success":
-						downloaded += 1;
+						downloaded += count;
 						break;
 					default:
 						break;

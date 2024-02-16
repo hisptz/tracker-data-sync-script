@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import DataExtractService from "./data-extract";
-import { config } from "dotenv";
 import FilesService from "./utils/files";
 import { DataUploadService } from "./data-upload";
 import SummaryService from "./summary";
 import { Command } from "commander";
 import { AppConfig, paramsSchema } from "./utils/config";
 import packageJson from "../package.json";
-import { ZodError } from "zod";
-import logger from "./utils/logger";
-import { capitalize } from "lodash";
 
 export default class DataSync {
 	dataUploadService: DataUploadService;
@@ -90,12 +86,12 @@ program
 				Number(arg.pageSize),
 				{
 					download: Number(arg.downloadConcurrency),
-					upload: Number(arg.uploadConcurrency,
-				,
+					upload: Number(arg.uploadConcurrency),
+				},
 			);
 
 			console.info(
-				`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency}`
+				`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency},
 			);
 			console.warn("This will delete previously generated files");
 			await dataSync.sync(true);
@@ -103,7 +99,7 @@ program
 			if (error instanceof ZodError) {
 				error.errors.forEach((e: any) => {
 					logger.error({
-						message: `${capitalize(e.code.replaceAll("_", " "))}. Expected ${e.expected} but received ${e.received} at ${e.path.join(".")}`
+						message: `${capitalize(e.code.replaceAll("_", " "))}. Expected ${e.expected} but received ${e.received} at ${e.path.join(".")}`,
 					});
 				});
 			} else {
