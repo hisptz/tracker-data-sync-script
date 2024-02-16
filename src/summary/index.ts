@@ -128,7 +128,7 @@ export default class SummaryService {
 		    Errors: ${summary.download.errors}
 		    Timed out: ${summary.download.timedOut}
 		    
-		 Upload: 
+		Upload: 
 		    Imported: ${summary.upload.imported}
 		    Updated: ${summary.upload.updated}
 		    Errors: ${summary.download.errors}
