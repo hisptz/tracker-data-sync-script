@@ -1,7 +1,7 @@
 {
   "name": "@hisptz/dhis2-tracker-data-sync",
   "pkgName": "tracker-data-sync",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "author": "HISP Tanzania<dev@hisptanzania.org>",
   "bin": {
@@ -40,8 +40,7 @@
   },
   "scripts": {
     "start": "ts-node src/index.ts",
-    "build": "tsup-node",
-    "postbuild": "./package.sh"
+    "build": "tsup-node"
   },
   "repository": {
     "url": "https://github.com/hisptz/tracker-data-sync-script"
