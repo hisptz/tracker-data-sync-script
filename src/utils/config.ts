@@ -139,7 +139,7 @@ export class AppConfig {
 			},
 			notificationConfig: {
 				emailSubject: process.env.EMAIL_SUBJECT as string,
-				enabled: process.env.ENABLE_NOTIFICATIONS === "true" ?? false,
+				enabled: process.env.ENABLE_NOTIFICATIONS === "true",
 				recipients: JSON.parse(process.env.EMAIL_RECIPIENTS ?? "[]"),
 				sendGridKey: process.env.SENDGRID_API_KEY as string,
 				from: {

@@ -179,7 +179,7 @@ export default class DataExtractService {
 				await SummaryService.updateDownloadSummary(
 					page,
 					count,
-					"success,
+					"success",
 				);
 
 				return {

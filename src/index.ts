@@ -6,6 +6,11 @@ import SummaryService from "./summary";
 import { Command } from "commander";
 import { AppConfig, paramsSchema } from "./utils/config";
 import packageJson from "../package.json";
+import { capitalize } from "lodash";
+import logger from "./utils/logger";
+import { ZodError } from "zod";
+
+import { config } from "dotenv";
 
 export default class DataSync {
 	dataUploadService: DataUploadService;
@@ -91,7 +96,7 @@ program
 			);
 
 			console.info(
-				`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency},
+				`Starting data sync: Duration: ${arg.duration}, Page size: ${arg.pageSize}, Upload concurrency: ${arg.uploadConcurrency}, Download concurrency: ${arg.downloadConcurrency}`,
 			);
 			console.warn("This will delete previously generated files");
 			await dataSync.sync(true);
